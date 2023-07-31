@@ -1,0 +1,31 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		// {
+		// 	"type": "cargo",
+		// 	"command": "clippy",
+		// 	"problemMatcher": [
+		// 		"$rustc",
+		// 		"$rust-panic"
+		// 	],
+		// 	"group": "build",
+		// 	"label": "rust: cargo clippy"
+		// },
+        {
+            "label": "cargo run",
+            "type": "shell",
+            "command": "cargo", // note: full path to the cargo
+            "args": [
+                "run",
+                // "--release",
+                // "--",
+                // "arg1"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+
+	]
+}
