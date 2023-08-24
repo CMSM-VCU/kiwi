@@ -9,14 +9,10 @@
 # [test3]
 # data = "gello"
 
-# [aaa]
-# isitalphabedical = true
-
-
-[[grids]]
-path = "Hello :3"
+# [[grids]]
+# path = "Hello :3"
 
 
 
-[[grids]]
-path = "Hello >:3"
+[[Grid]]
+path = "src/testgrid.csv"

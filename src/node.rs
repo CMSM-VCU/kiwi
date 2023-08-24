@@ -5,6 +5,8 @@ use bevy::prelude::*;
 use serde::{Serialize, Deserialize};
 use bevy::math::Vec3A;
 
+#[derive(Component)]
+pub struct Node;
 
 #[derive(Component, Default, Serialize, Deserialize)]
 pub struct Position(pub Vec3A);

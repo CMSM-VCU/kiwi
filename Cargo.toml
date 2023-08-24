@@ -18,8 +18,7 @@ lto = "thin"
 
 
 [dependencies]
-# Schedules and running stuff
-bevy = "0.11.0"
+
 
 # # Vector library
 # glam = { git = "https://github.com/watsonkh/glam-rs-4-bevy_ecs.git" }
@@ -28,3 +27,10 @@ bevy = "0.11.0"
 serde = "1.0.164"
 toml = "0.7.4"
 clap = {version = "4.3.4", features = ["derive"]}
+csv = "1.1"
+
+
+# Schedules and running stuff
+[dependencies.bevy]
+version = "0.11.2"
+features = ["multi-threaded", "dynamic_linking"]

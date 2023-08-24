@@ -1,10 +1,12 @@
 use bevy::prelude::*;
-use toml;
+use bevy::math::Vec3A;
 
-use std::fs;
+use std::{fs, collections::HashMap};
 use clap::Parser;
 
-// Parses input file
+use crate::node;
+
+
 pub struct ParsingPlugin;
 impl Plugin for ParsingPlugin {
     fn build(&self, app: &mut App) {
@@ -17,7 +19,11 @@ impl Plugin for ParsingPlugin {
 
 
             // Throw error if e
-            .add_systems(PostStartup, check_input_file_consumed);
+            .add_systems(Startup, parse_grid)
+            .add_systems(PostStartup, check_input_file_consumed)
+
+            ;
+
     }
 }
 
@@ -83,5 +89,57 @@ fn check_input_file_consumed(config: Res<KiwiConfig>){
     info!("Checking input file consumption");
     if !config.all_consumed() {
         panic!("Not all input file keys consumed, unconsumed keys:\n{:?}", config.unconsumed_keys());
+    }
+}
+
+
+type Record = HashMap<String, String>;
+
+fn parse_grid(
+    mut config: ResMut<KiwiConfig>,
+    mut commands: Commands
+){
+    let grids = config.get("Grid")
+        .expect("No [[Grid]]s in input file")
+        .as_array().expect("Grid not in an array, use [[Grid]] tag to specify that it's an array of tables https://toml.io/en/v1.0.0#array-of-tables");
+
+    for grid in grids{
+        // Grid must be a table that contains a path key
+        let path = grid
+            .as_table().expect("[[Grid]] must be a toml table") // Gets table
+            .get("path").expect("[[Grid]] must have 'path' key!") // Gets path
+            .as_str().expect("the path key in a [[Grid]] must be a string"); // Assets path is a string
+
+        let mut rdr = match csv::ReaderBuilder::new()
+            .has_headers(true)
+            .delimiter(b',')
+            .comment(Some(b'#'))
+            .from_path(path){
+                Ok(reader) => reader,
+                Err(err) => panic!("Could not read grid file at {path}. Error: {err}"),
+            };
+        
+        dbg!(rdr.headers().expect("Grid CSV must have headers"));
+
+        for result in rdr.deserialize(){
+            let record: Record = match result{
+                Ok(record) => record,
+                Err(err) => panic!("Could not parse record: {err}"),
+            };
+            let mut pos: Vec3A = Vec3A::ZERO;
+
+            // Parse record and create nodes from grid file
+            if record.contains_key("x"){
+                pos.x = str::parse::<f32>(record.get("x").unwrap()).expect("Could not parse float, may need spaces in header");
+            }
+            if record.contains_key("y"){
+                pos.y = str::parse::<f32>(record.get("y").unwrap()).expect("Could not parse float, may need spaces in header");
+            }
+            if record.contains_key("z"){
+                pos.z = str::parse::<f32>(record.get("z").unwrap()).expect("Could not parse float, may need spaces in header");
+            }
+            commands.spawn((node::Node, node::Position(pos)));
+            println!("{pos:?}");
+        }
     }
 }
