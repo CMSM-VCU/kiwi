@@ -19,7 +19,6 @@ fn main() {
         })
         
         .add_plugins(ParsingPlugin)
-        // .add_systems(Startup, parse_grid)
 
 
         // exit after 1 update call

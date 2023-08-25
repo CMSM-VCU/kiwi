@@ -93,7 +93,6 @@ fn check_input_file_consumed(config: Res<KiwiConfig>){
 }
 
 
-type Record = HashMap<String, String>;
 
 fn parse_grid(
     mut config: ResMut<KiwiConfig>,
@@ -121,25 +120,62 @@ fn parse_grid(
         
         dbg!(rdr.headers().expect("Grid CSV must have headers"));
 
+        // Parse record and create nodes from grid file
         for result in rdr.deserialize(){
-            let record: Record = match result{
+
+            // Converts each entry (row) in the reader to a hashmap where the column header is the key
+            // use record.remove(key) to get the value because there is a check to see if 
+            // all entries are consumed to prevent typos in headers from silently not working
+            let mut record: HashMap<String, String> = match result{
                 Ok(record) => record,
                 Err(err) => panic!("Could not parse record: {err}"),
             };
-            let mut pos: Vec3A = Vec3A::ZERO;
 
-            // Parse record and create nodes from grid file
+            let mut pos: Vec3A = Vec3A::ZERO;
             if record.contains_key("x"){
-                pos.x = str::parse::<f32>(record.get("x").unwrap()).expect("Could not parse float, may need spaces in header");
+                pos.x = str::parse::<f32>(record.remove("x").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
             }
             if record.contains_key("y"){
-                pos.y = str::parse::<f32>(record.get("y").unwrap()).expect("Could not parse float, may need spaces in header");
+                pos.y = str::parse::<f32>(record.remove("y").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
             }
             if record.contains_key("z"){
-                pos.z = str::parse::<f32>(record.get("z").unwrap()).expect("Could not parse float, may need spaces in header");
+                pos.z = str::parse::<f32>(record.remove("z").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
             }
-            commands.spawn((node::Node, node::Position(pos)));
-            println!("{pos:?}");
+
+            let mut disp: Vec3A = Vec3A::ZERO;
+            if record.contains_key("ux"){
+                disp.x = str::parse::<f32>(record.remove("ux").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+            }
+            if record.contains_key("uy"){
+                disp.y = str::parse::<f32>(record.remove("uy").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+            }
+            if record.contains_key("uz"){
+                disp.z = str::parse::<f32>(record.remove("uz").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+            }
+
+            let mut vel: Vec3A = Vec3A::ZERO;
+            if record.contains_key("vx"){
+                vel.x = str::parse::<f32>(record.remove("vx").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+            }
+            if record.contains_key("vy"){
+                vel.y = str::parse::<f32>(record.remove("vy").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+            }
+            if record.contains_key("vz"){
+                vel.z = str::parse::<f32>(record.remove("vz").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+            }
+
+            // Panic if there are unconsumed keys
+            if record.keys().len() != 0{
+                panic!("Unused header in grid file: {:?}", record.keys());
+            }
+
+            // Spawn node in ECS world
+            commands.spawn((
+                node::Node,
+                node::Position(pos),
+                node::Displacement(disp),
+                node::Velocity(vel)
+            ));
         }
     }
 }
