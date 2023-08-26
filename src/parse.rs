@@ -32,10 +32,9 @@ impl Plugin for ParsingPlugin {
 
 /// Abstraction around a toml::Table that keeps track of used keys
 /// Used to make sure all inputs are consumed
-#[derive(Resource)]
-pub struct KiwiConfig{
+#[derive(Resource, Debug)]
+struct KiwiConfig{
     table: toml::Table,
-    used_keys: Vec<String>,
 }
 
 impl KiwiConfig {
@@ -47,32 +46,11 @@ impl KiwiConfig {
 
         KiwiConfig{
             table: contents[..].parse::<toml::Table>().unwrap(),
-            used_keys: Vec::new()
         }
     }
 
     fn get(&mut self, key: &str) -> Option<&toml::Value>{
-        self.used_keys.push(key.to_string());
         self.table.get(key)
-    }
-
-    fn all_consumed(&self) -> bool {
-        for key in self.table.keys(){
-            if !self.used_keys.contains(key) {
-                return false
-            }
-        }
-        return true
-    }
-
-    fn unconsumed_keys(&self) -> Vec<&String> {
-        let mut unconsumed_keys = Vec::new();
-        for key in self.table.keys(){
-            if !self.used_keys.contains(key) {
-                unconsumed_keys.push(key);
-            }
-        }
-        unconsumed_keys
     }
 }
 
@@ -87,8 +65,8 @@ struct CommandLineInputs{
 // Panics if not all keys in the input file are read
 fn check_input_file_consumed(config: Res<KiwiConfig>){
     info!("Checking input file consumption");
-    if !config.all_consumed() {
-        panic!("Not all input file keys consumed, unconsumed keys:\n{:?}", config.unconsumed_keys());
+    if !config.table.is_empty() {
+        panic!("Not all input file keys consumed, unconsumed keys:\n{:?}", config.table.keys().collect::<Vec<&String>>());
     }
 }
 
