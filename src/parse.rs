@@ -4,7 +4,7 @@ use bevy::math::Vec3A;
 use std::{fs, collections::HashMap};
 use clap::Parser;
 
-use crate::node;
+use crate::prelude::*;
 
 
 pub struct ParsingPlugin;
@@ -164,6 +164,28 @@ fn parse_grid(
                 vel.z = str::parse::<f32>(record.remove("vz").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
             }
 
+            let mut force: Vec3A = Vec3A::ZERO;
+            if record.contains_key("fx"){
+                force.x = str::parse::<f32>(record.remove("fx").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+            }
+            if record.contains_key("fy"){
+                force.y = str::parse::<f32>(record.remove("fy").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+            }
+            if record.contains_key("fz"){
+                force.z = str::parse::<f32>(record.remove("fz").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+            }
+
+
+            // Mass can be handeled multiple ways, but needs to be explicitly defined
+            // Options:
+            //      Explicitly stated in grid file
+            //      Volume in grid file, density in from material
+            //      Both, but need to be checked for consistency
+            let mut mass: f32 = 0.0;
+            if record.contains_key("mass"){
+                mass = str::parse::<f32>(record.remove("mass").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+            }
+
             // Panic if there are unconsumed keys
             if record.keys().len() != 0{
                 panic!("Unused header in grid file: {:?}", record.keys());
@@ -171,10 +193,14 @@ fn parse_grid(
 
             // Spawn node in ECS world
             commands.spawn((
-                node::Node,
-                node::Position(pos),
-                node::Displacement(disp),
-                node::Velocity(vel)
+                Node,
+                KinematicBundle{
+                    position: Position(pos),
+                    displacement: Displacement(disp),
+                    velocity: Velocity(vel),
+                    force: Force(force),
+                    mass: Mass(mass)
+                }
             ));
         }
     }

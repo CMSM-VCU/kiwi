@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use bevy::app::AppExit;
 use bevy::log::Level;
 use bevy::log::LogPlugin;
