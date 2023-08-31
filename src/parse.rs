@@ -49,8 +49,8 @@ impl KiwiConfig {
         }
     }
 
-    fn get(&mut self, key: &str) -> Option<&toml::Value>{
-        self.table.get(key)
+    fn get(&mut self, key: &str) -> Option<toml::Value>{
+        self.table.remove(key)
     }
 }
 
@@ -76,9 +76,8 @@ fn parse_grid(
     mut config: ResMut<KiwiConfig>,
     mut commands: Commands
 ){
-    let grids = config.get("Grid")
-        .expect("No [[Grid]]s in input file")
-        .as_array().expect("Grid not in an array, use [[Grid]] tag to specify that it's an array of tables https://toml.io/en/v1.0.0#array-of-tables");
+    let grids = config.get("Grid").unwrap();
+    let grids = grids.as_array().expect("msg");
 
     for grid in grids{
         // Grid must be a table that contains a path key
@@ -95,8 +94,12 @@ fn parse_grid(
                 Ok(reader) => reader,
                 Err(err) => panic!("Could not read grid file at {path}. Error: {err}"),
             };
+        assert!(rdr.has_headers());
+
+
+        let trimmed_headers: csv::StringRecord = rdr.headers().unwrap().iter().map(|x|{x.trim()}).collect();
+        rdr.set_headers(trimmed_headers);
         
-        dbg!(rdr.headers().expect("Grid CSV must have headers"));
 
         // Parse record and create nodes from grid file
         for result in rdr.deserialize(){
@@ -111,48 +114,47 @@ fn parse_grid(
 
             let mut pos: Vec3A = Vec3A::ZERO;
             if record.contains_key("x"){
-                pos.x = str::parse::<f32>(record.remove("x").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+                pos.x = str::parse::<f32>(record.remove("x").unwrap().as_str()).expect("Could not parse point position x");
             }
             if record.contains_key("y"){
-                pos.y = str::parse::<f32>(record.remove("y").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+                pos.y = str::parse::<f32>(record.remove("y").unwrap().as_str()).expect("Could not parse point position y");
             }
             if record.contains_key("z"){
-                pos.z = str::parse::<f32>(record.remove("z").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+                pos.z = str::parse::<f32>(record.remove("z").unwrap().as_str()).expect("Could not parse point position z");
             }
 
             let mut disp: Vec3A = Vec3A::ZERO;
             if record.contains_key("ux"){
-                disp.x = str::parse::<f32>(record.remove("ux").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+                disp.x = str::parse::<f32>(record.remove("ux").unwrap().as_str()).expect("Could not parse ux");
             }
             if record.contains_key("uy"){
-                disp.y = str::parse::<f32>(record.remove("uy").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+                disp.y = str::parse::<f32>(record.remove("uy").unwrap().as_str()).expect("Could not parse uy");
             }
             if record.contains_key("uz"){
-                disp.z = str::parse::<f32>(record.remove("uz").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+                disp.z = str::parse::<f32>(record.remove("uz").unwrap().as_str()).expect("Could not parse uz");
             }
 
             let mut vel: Vec3A = Vec3A::ZERO;
             if record.contains_key("vx"){
-                vel.x = str::parse::<f32>(record.remove("vx").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+                vel.x = str::parse::<f32>(record.remove("vx").unwrap().as_str()).expect("Could not parse vx");
             }
             if record.contains_key("vy"){
-                vel.y = str::parse::<f32>(record.remove("vy").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+                vel.y = str::parse::<f32>(record.remove("vy").unwrap().as_str()).expect("Could not parse vy");
             }
             if record.contains_key("vz"){
-                vel.z = str::parse::<f32>(record.remove("vz").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+                vel.z = str::parse::<f32>(record.remove("vz").unwrap().as_str()).expect("Could not parse vz");
             }
 
             let mut force: Vec3A = Vec3A::ZERO;
             if record.contains_key("fx"){
-                force.x = str::parse::<f32>(record.remove("fx").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+                force.x = str::parse::<f32>(record.remove("fx").unwrap().as_str()).expect("Could not parse fx");
             }
             if record.contains_key("fy"){
-                force.y = str::parse::<f32>(record.remove("fy").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+                force.y = str::parse::<f32>(record.remove("fy").unwrap().as_str()).expect("Could not parse fy");
             }
             if record.contains_key("fz"){
-                force.z = str::parse::<f32>(record.remove("fz").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+                force.z = str::parse::<f32>(record.remove("fz").unwrap().as_str()).expect("Could not parse fz");
             }
-
 
             // Mass can be handeled multiple ways, but needs to be explicitly defined
             // Options:
@@ -161,8 +163,14 @@ fn parse_grid(
             //      Both, but need to be checked for consistency
             let mut mass: f32 = 0.0;
             if record.contains_key("mass"){
-                mass = str::parse::<f32>(record.remove("mass").unwrap().as_str()).expect("Could not parse float, may need spaces in header");
+                mass = str::parse::<f32>(record.remove("mass").unwrap().as_str()).expect("Could not parse mass");
             }
+
+            
+            if record.contains_key("mat"){
+                let mat = str::parse::<u32>(record.remove("mat").unwrap().as_str()).expect("Could not parse material, must be positive unsigned 32 bit integer");
+            }
+
 
             // Panic if there are unconsumed keys
             if record.keys().len() != 0{
