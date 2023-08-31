@@ -32,7 +32,7 @@ struct Connection{
 }
 impl PartialEq for Connection {
     fn eq(&self, other: &Self) -> bool {
-        (self.from == other.from && self.to == other.to) || (self.to == other.from && self.from == other.to)
+        return (self.from == other.from && self.to == other.to) || (self.to == other.from && self.from == other.to)
     }
 }
 impl Eq for Connection{}
