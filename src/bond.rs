@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 use serde::{Serialize, Deserialize};
 
 use crate::prelude::*;
@@ -9,7 +9,7 @@ use kd_tree::{KdTree, KdPoint};
 pub struct Bond;
 
 
-
+#[allow(clippy::needless_pass_by_value)]
 pub fn calc_bond_strain(
     mut bonds: Query<(&mut Strain, &Connection), With<Bond>>,
     nodes: Query<(Entity, &Position, &Displacement), With<Node>>
@@ -46,26 +46,29 @@ pub fn create_reference_bonds_spherical(
 
     let tree = KdTree::build_by_ordered_float(material_points.iter().map(|x|{ReferencePoint(x.0, x.1)}).collect());
 
-    let mut connections: Vec<Connection> = Vec::new();
+    let mut connections: HashMap<u64, Connection> = HashMap::new();
 
     for (entity, position) in material_points.iter(){
         let neighbor_positions: Vec<&ReferencePoint> = tree.within_radius(position, horizon);
         for neighbor_position in neighbor_positions{
             if neighbor_position.1 != position{
+                let other = material_points.get(neighbor_position.0).expect("Problem finding neighbor node").0;
                 let connection = Connection{
                     from: entity,
-                    to: material_points.get(neighbor_position.0).expect("Problem finding neighbor node").0
+                    to: other
                 };
 
-                if !connections.contains(&connection){
-                    connections.push(connection);
+                let key: u64 = u64::from(entity.index())*u64::from(other.index());
+
+                if !connections.contains_key(&key){
+                    connections.insert(key, connection);
                 }
             }
         }
     }
     
 
-    for connection in connections{
+    for connection in connections.into_iter().map(|(_key, val)| val ){
         trace!("Creating bond: ({:?}, {:?})", connection.from.index(), connection.to.index());
         commands.spawn((
             Bond,
