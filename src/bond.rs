@@ -3,12 +3,14 @@ use serde::{Serialize, Deserialize};
 
 use crate::prelude::*;
 
+use kd_tree::KdTree;
+
 #[derive(Component, Serialize, Deserialize)]
 pub struct Bond;
 
 
 
-fn calc_bond_strain(
+pub fn calc_bond_strain(
     mut bonds: Query<(&mut Strain, &Connection), With<Bond>>,
     nodes: Query<(Entity, &Position, &Displacement), With<Node>>
 ){
@@ -23,10 +25,20 @@ fn calc_bond_strain(
     }
 }
 
+pub fn create_reference_bonds_spherical(
+    nodes: Query<&Position, With<MaterialPoint>>
+){
+    
+    let tree = KdTree::build_by_ordered_float(nodes.iter().collect());
+    dbg!(tree.items());
+
+    todo!("For each point, find neighbors within a radius and spawn bonds via bevy commands");
+}
+
 
 // Connection
 #[derive(Component, Serialize, Deserialize)]
-struct Connection{
+pub struct Connection{
     pub from: Entity,
     pub to: Entity
 }
@@ -39,4 +51,4 @@ impl Eq for Connection{}
 
 // Strain
 #[derive(Component, Default, Serialize, Deserialize)]
-struct Strain(pub f32);
+pub struct Strain(pub f32);

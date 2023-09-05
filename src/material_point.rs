@@ -4,4 +4,4 @@
 use bevy::prelude::*;
 
 #[derive(Component)]
-pub struct Node;
+pub struct MaterialPoint;

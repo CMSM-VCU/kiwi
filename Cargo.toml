@@ -28,7 +28,8 @@ serde = "1.0.164"
 toml = "0.7.4"
 clap = {version = "4.3.4", features = ["derive"]}
 csv = "1.1"
-
+kd-tree = "0.5.1"
+typenum = "1.16.0"
 
 # Schedules and running stuff
 [dependencies.bevy]
