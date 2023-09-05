@@ -64,10 +64,11 @@ struct CommandLineInputs{
 
 // Panics if not all keys in the input file are read
 fn check_input_file_consumed(config: Res<KiwiConfig>){
-    info!("Checking input file consumption");
+    info!("Checking input file consumption...");
     if !config.table.is_empty() {
         panic!("Not all input file keys consumed, unconsumed keys:\n{:?}", config.table.keys().collect::<Vec<&String>>());
     }
+    info!("All input file features used!");
 }
 
 
@@ -156,7 +157,7 @@ fn parse_grid(
                 force.z = str::parse::<f32>(record.remove("fz").unwrap().as_str()).expect("Could not parse fz");
             }
 
-            // Mass can be handeled multiple ways, but needs to be explicitly defined
+            // TODO: Mass can be handeled multiple ways, but needs to be explicitly defined
             // Options:
             //      Explicitly stated in grid file
             //      Volume in grid file, density in from material
