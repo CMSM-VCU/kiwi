@@ -35,12 +35,14 @@ impl KdPoint for ReferencePoint<'_>{
     fn at(&self, k: usize) -> f32 { self.1.0[k] }
 }
 
+#[allow(clippy::needless_pass_by_value)]
 pub fn create_reference_bonds_spherical(
     material_points: Query<(Entity, &Position), With<MaterialPoint>>,
     mut config: ResMut<KiwiConfig>,
     mut commands: Commands
 ){
-    let horizon = config.get("horizon").expect("key 'horizon' not found in config file").as_float().expect("'horizon' is not a float") as f32;
+    #[allow(clippy::cast_possible_truncation)]
+    let horizon: f32 = config.get("horizon").expect("key 'horizon' not found in config file").as_float().expect("'horizon' is not a float") as f32;
 
     let tree = KdTree::build_by_ordered_float(material_points.iter().map(|x|{ReferencePoint(x.0, x.1)}).collect());
 

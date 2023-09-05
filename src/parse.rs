@@ -12,7 +12,7 @@ impl Plugin for ParsingPlugin {
     fn build(&self, app: &mut App) {
 
         let command_line_inputs = CommandLineInputs::parse();
-        let input_file = KiwiConfig::new(command_line_inputs.input_file);
+        let input_file = KiwiConfig::new(command_line_inputs.input_file.as_str());
 
         app
             .insert_resource(input_file)
@@ -37,10 +37,10 @@ pub struct KiwiConfig{
 }
 
 impl KiwiConfig {
-    fn new(path: String) -> KiwiConfig {
-        let contents:String = match fs::read_to_string(&path){
+    fn new(path: &str) -> KiwiConfig {
+        let contents:String = match fs::read_to_string(path){
             Ok(file) => file,
-            Err(error) => panic!("Could not open input file: {:?}, {:?}", error, path)
+            Err(error) => panic!("Could not open input file: {error:?}, {path:?}")
         };
 
         KiwiConfig{
@@ -62,11 +62,10 @@ struct CommandLineInputs{
 
 
 // Panics if not all keys in the input file are read
+#[allow(clippy::needless_pass_by_value)]
 fn check_input_file_consumed(config: Res<KiwiConfig>){
     info!("Checking input file consumption...");
-    if !config.table.is_empty() {
-        panic!("Not all input file keys consumed, unconsumed keys:\n{:?}", config.table.keys().collect::<Vec<&String>>());
-    }
+    assert!(config.table.is_empty(), "Not all input file keys consumed, unconsumed keys:\n{:?}", config.table.keys().collect::<Vec<&String>>());
     info!("All inputs used!");
 }
 
@@ -103,7 +102,7 @@ fn parse_grid(
         assert!(rdr.has_headers());
 
         
-        let trimmed_headers: csv::StringRecord = rdr.headers().unwrap().iter().map(|x|{x.trim()}).collect();
+        let trimmed_headers: csv::StringRecord = rdr.headers().unwrap().iter().map(|x|{x.trim().to_lowercase()}).collect();
         rdr.set_headers(trimmed_headers);
         
 
@@ -181,10 +180,9 @@ fn parse_grid(
             };
 
 
-            // Panic if there are unconsumed keys
-            if record.keys().len() != 0{
-                panic!("Unused header in grid file: {:?}", record.keys());
-            }
+            // Make sure there are no unconsumed keys (this will find typos in the header)
+            assert!(record.keys().len() == 0, "Unused header in grid file: {:?}", record.keys());
+
             trace!("Adding point: {:?}", pos);
             // Spawn node in ECS world
             commands.spawn((
