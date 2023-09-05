@@ -18,7 +18,6 @@ impl Plugin for ParsingPlugin {
             .insert_resource(input_file)
 
 
-            // Throw error if e
             .add_systems(Startup, parse_grid)
             .add_systems(PostStartup, check_input_file_consumed)
 
@@ -30,7 +29,7 @@ impl Plugin for ParsingPlugin {
 
 
 
-/// Abstraction around a toml::Table that keeps track of used keys
+/// Abstraction around a `toml::Table` that keeps track of used keys
 /// Used to make sure all inputs are consumed
 #[derive(Resource, Debug)]
 struct KiwiConfig{
@@ -166,11 +165,14 @@ fn parse_grid(
             if record.contains_key("mass"){
                 mass = str::parse::<f32>(record.remove("mass").unwrap().as_str()).expect("Could not parse mass");
             }
-
             
-            if record.contains_key("mat"){
-                let mat = str::parse::<u32>(record.remove("mat").unwrap().as_str()).expect("Could not parse material, must be positive unsigned 32 bit integer");
+
+            let mat: u32 = if record.contains_key("mat"){
+                str::parse::<u32>(record.remove("mat").unwrap().as_str()).expect("Could not parse material, must be positive unsigned 32 bit integer")
             }
+            else{
+                panic!("Could not find column 'mat' in grid file");
+            };
 
 
             // Panic if there are unconsumed keys
@@ -186,8 +188,9 @@ fn parse_grid(
                     displacement: Displacement(disp),
                     velocity: Velocity(vel),
                     force: Force(force),
-                    mass: Mass(mass)
-                }
+                    mass: Mass(mass),
+                },
+                MaterialID(mat)
             ));
         }
     }
