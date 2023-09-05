@@ -67,11 +67,16 @@ fn check_input_file_consumed(config: Res<KiwiConfig>){
     if !config.table.is_empty() {
         panic!("Not all input file keys consumed, unconsumed keys:\n{:?}", config.table.keys().collect::<Vec<&String>>());
     }
-    info!("All input file features used!");
+    info!("All inputs used!");
 }
 
 
-
+/// Consumes grid field of `KiwiConfig` and creates material points from the grid file (csv format)
+/// Possible data includes:
+///     `Position` specified by the x, y, and z column
+///     `Displacement` specified by the ux, uy, and uz column
+///     `MaterialID` (required) specified by the mat column
+///     `Mass` specified by the mass column
 fn parse_grid(
     mut config: ResMut<KiwiConfig>,
     mut commands: Commands
@@ -86,6 +91,7 @@ fn parse_grid(
             .get("path").expect("[[Grid]] must have 'path' key!") // Gets path
             .as_str().expect("the path key in a [[Grid]] must be a string"); // Assets path is a string
 
+        // CSV Properties
         let mut rdr = match csv::ReaderBuilder::new()
             .has_headers(true)
             .delimiter(b',')
@@ -96,12 +102,12 @@ fn parse_grid(
             };
         assert!(rdr.has_headers());
 
-
+        
         let trimmed_headers: csv::StringRecord = rdr.headers().unwrap().iter().map(|x|{x.trim()}).collect();
         rdr.set_headers(trimmed_headers);
         
 
-        // Parse record and create nodes from grid file
+        // Parse record and create `MaterialPoints` from grid file
         for result in rdr.deserialize(){
 
             // Converts each entry (row) in the reader to a hashmap where the column header is the key
@@ -165,13 +171,13 @@ fn parse_grid(
             if record.contains_key("mass"){
                 mass = str::parse::<f32>(record.remove("mass").unwrap().as_str()).expect("Could not parse mass");
             }
-            
+
 
             let mat: u32 = if record.contains_key("mat"){
                 str::parse::<u32>(record.remove("mat").unwrap().as_str()).expect("Could not parse material, must be positive unsigned 32 bit integer")
             }
             else{
-                panic!("Could not find column 'mat' in grid file");
+                panic!("Could not find column 'mat' in grid file. Each points must have a material number");
             };
 
 
@@ -179,10 +185,10 @@ fn parse_grid(
             if record.keys().len() != 0{
                 panic!("Unused header in grid file: {:?}", record.keys());
             }
-
+            trace!("Adding point: {:?}", pos);
             // Spawn node in ECS world
             commands.spawn((
-                Node,
+                MaterialPoint,
                 KinematicBundle{
                     position: Position(pos),
                     displacement: Displacement(disp),
