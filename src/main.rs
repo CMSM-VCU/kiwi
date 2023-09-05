@@ -18,7 +18,7 @@ fn main() {
         })
         
         .add_plugins(ParsingPlugin)
-        .add_systems(Update, create_reference_bonds_spherical)
+        .add_systems(Startup, create_reference_bonds_spherical)
 
 
         // exit after 1 update call
@@ -30,7 +30,7 @@ fn main() {
 }
 
 fn exit_system(mut exit: EventWriter<AppExit>, mut iteration: Local<i32>) {
-    info!("{}",*iteration);
+    info!("Iteration: {}",*iteration);
     if *iteration >= 0{
         info!("Closing successfully!");
         exit.send(AppExit);

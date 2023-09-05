@@ -18,7 +18,7 @@ impl Plugin for ParsingPlugin {
             .insert_resource(input_file)
 
 
-            .add_systems(Startup, parse_grid)
+            .add_systems(PreStartup, parse_grid)
             .add_systems(PostStartup, check_input_file_consumed)
 
             ;
@@ -32,7 +32,7 @@ impl Plugin for ParsingPlugin {
 /// Abstraction around a `toml::Table` that keeps track of used keys
 /// Used to make sure all inputs are consumed
 #[derive(Resource, Debug)]
-struct KiwiConfig{
+pub struct KiwiConfig{
     table: toml::Table,
 }
 
@@ -48,7 +48,7 @@ impl KiwiConfig {
         }
     }
 
-    fn get(&mut self, key: &str) -> Option<toml::Value>{
+    pub fn get(&mut self, key: &str) -> Option<toml::Value>{
         self.table.remove(key)
     }
 }

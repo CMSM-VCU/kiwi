@@ -12,18 +12,18 @@ pub struct KinematicBundle {
     pub mass: Mass
 }
 
-#[derive(Component, Default, Serialize, Deserialize, Debug)]
+#[derive(Component, Default, Serialize, Deserialize, Debug, PartialEq)]
 pub struct Position(pub Vec3A);
 impl KdPoint for Position{
-    type Scalar = f64;
+    type Scalar = f32;
     type Dim = typenum::U2;
-    fn at(&self, k: usize) -> f64 { self.0[k] as f64 }
+    fn at(&self, k: usize) -> f32 { self.0[k] }
 }
 
 impl KdPoint for &Position{
-    type Scalar = f64;
+    type Scalar = f32;
     type Dim = typenum::U2;
-    fn at(&self, k: usize) -> f64 { self.0[k] as f64 }
+    fn at(&self, k: usize) -> f32 { self.0[k] }
 }
 
 

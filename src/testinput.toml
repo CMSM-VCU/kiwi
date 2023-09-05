@@ -12,7 +12,7 @@
 # [[grids]]
 # path = "Hello :3"
 
-
+horizon = 2.0
 
 [[Grid]]
 path = "src/testgrid.csv"
