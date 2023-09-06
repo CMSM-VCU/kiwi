@@ -26,7 +26,6 @@ pub mod prelude{
         PreUpdate,
         Update,
         PostUpdate,
-        
 
         EventWriter,
         EventReader,
@@ -46,8 +45,6 @@ pub mod prelude{
         info,
         debug,
         trace,
-
-
     };
 }
 
