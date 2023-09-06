@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-///
+/// Defines the mechanical behavior of a `MaterialPoint` 
 #[derive(Component)]
 pub struct Material;
 
