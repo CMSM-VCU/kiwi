@@ -5,14 +5,16 @@ use crate::prelude::*;
 
 use kd_tree::{KdTree, KdPoint};
 
-#[derive(Component, Serialize, Deserialize)]
+
+/// Unit struct for labeling entities as a `Bond`
+#[derive(Component)]
 pub struct Bond;
 
-
+/// Populates the strain component of `Bond`s
 #[allow(clippy::needless_pass_by_value)]
 pub fn calc_bond_strain(
     mut bonds: Query<(&mut Strain, &Connection), With<Bond>>,
-    nodes: Query<(Entity, &Position, &Displacement), With<Node>>
+    nodes: Query<(Entity, &Position, &Displacement), With<MaterialPoint>>
 ){
     for (mut strain, connection) in bonds.iter_mut(){
         let from = nodes.get(connection.from).expect("");
@@ -35,10 +37,12 @@ impl KdPoint for ReferencePoint<'_>{
     fn at(&self, k: usize) -> f32 { self.1.0[k] }
 }
 
+/// Consumes horizon value from `InputFile`. This may need to change in the future as some formulations require that info
+/// Creates `Bond`s with `MaterialPoint`s in a spherical radius, horizon, around them. Bonds are spawned as separate `Entity`s
 #[allow(clippy::needless_pass_by_value)]
 pub fn create_reference_bonds_spherical(
     material_points: Query<(Entity, &Position), With<MaterialPoint>>,
-    mut config: ResMut<KiwiConfig>,
+    mut config: ResMut<InputFile>,
     mut commands: Commands
 ){
     #[allow(clippy::cast_possible_truncation)]
@@ -67,12 +71,12 @@ pub fn create_reference_bonds_spherical(
         }
     }
     
-
+    // Maybe instead of a bond entity, each material point could have a vec of enities (good for state-based, bad for bond-based)
     for connection in connections.into_iter().map(|(_key, val)| val ){
         trace!("Creating bond: ({:?}, {:?})", connection.from.index(), connection.to.index());
         commands.spawn((
             Bond,
-            connection
+            connection,
         ));
     }
 }
@@ -80,10 +84,13 @@ pub fn create_reference_bonds_spherical(
 
 
 
-// Connection
+/// Represents a connection between two entites, used in a `Bond` to identify what it's connected to
+/// 
 #[derive(Component, Serialize, Deserialize)]
 pub struct Connection{
+    /// One side of the connection
     pub from: Entity,
+    /// The other side of the connection
     pub to: Entity
 }
 impl PartialEq for Connection {
@@ -93,6 +100,6 @@ impl PartialEq for Connection {
 }
 impl Eq for Connection{}
 
-// Strain
+/// Strain component for a bond in a bond-based PD simulation
 #[derive(Component, Default, Serialize, Deserialize)]
 pub struct Strain(pub f32);

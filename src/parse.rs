@@ -6,13 +6,15 @@ use clap::Parser;
 
 use crate::prelude::*;
 
-
+/// Parses user input
+/// Parses the command line inputs with `CommandLineInput`.
+/// Reads the input file and initializes datastructures with `KiwiConfig`.
 pub struct ParsingPlugin;
 impl Plugin for ParsingPlugin {
     fn build(&self, app: &mut App) {
 
         let command_line_inputs = CommandLineInputs::parse();
-        let input_file = KiwiConfig::new(command_line_inputs.input_file.as_str());
+        let input_file = InputFile::new(command_line_inputs.input_file.as_str());
 
         app
             .insert_resource(input_file)
@@ -32,22 +34,23 @@ impl Plugin for ParsingPlugin {
 /// Abstraction around a `toml::Table` that keeps track of used keys
 /// Used to make sure all inputs are consumed
 #[derive(Resource, Debug)]
-pub struct KiwiConfig{
+pub struct InputFile{
     table: toml::Table,
 }
 
-impl KiwiConfig {
-    fn new(path: &str) -> KiwiConfig {
+impl InputFile {
+    fn new(path: &str) -> InputFile {
         let contents:String = match fs::read_to_string(path){
             Ok(file) => file,
             Err(error) => panic!("Could not open input file: {error:?}, {path:?}")
         };
 
-        KiwiConfig{
+        InputFile{
             table: contents[..].parse::<toml::Table>().unwrap(),
         }
     }
 
+    /// Retrieves AND CONSUMES a value from the input file
     pub fn get(&mut self, key: &str) -> Option<toml::Value>{
         self.table.remove(key)
     }
@@ -63,21 +66,21 @@ struct CommandLineInputs{
 
 // Panics if not all keys in the input file are read
 #[allow(clippy::needless_pass_by_value)]
-fn check_input_file_consumed(config: Res<KiwiConfig>){
+fn check_input_file_consumed(config: Res<InputFile>){
     info!("Checking input file consumption...");
     assert!(config.table.is_empty(), "Not all input file keys consumed, unconsumed keys:\n{:?}", config.table.keys().collect::<Vec<&String>>());
     info!("All inputs used!");
 }
 
 
-/// Consumes grid field of `KiwiConfig` and creates material points from the grid file (csv format)
+/// Consumes grid field of `InputFile` and creates material points from the grid file (csv format)
 /// Possible data includes:
 ///     `Position` specified by the x, y, and z column
 ///     `Displacement` specified by the ux, uy, and uz column
 ///     `MaterialID` (required) specified by the mat column
 ///     `Mass` specified by the mass column
 fn parse_grid(
-    mut config: ResMut<KiwiConfig>,
+    mut config: ResMut<InputFile>,
     mut commands: Commands
 ){
     let grids = config.get("Grid").unwrap();
@@ -184,16 +187,14 @@ fn parse_grid(
             assert!(record.keys().len() == 0, "Unused header in grid file: {:?}", record.keys());
 
             trace!("Adding point: {:?}", pos);
-            // Spawn node in ECS world
+            // Spawn `MaterialPoint` in ECS world
             commands.spawn((
                 MaterialPoint,
-                KinematicBundle{
-                    position: Position(pos),
-                    displacement: Displacement(disp),
-                    velocity: Velocity(vel),
-                    force: Force(force),
-                    mass: Mass(mass),
-                },
+                Position(pos),
+                Displacement(disp),
+                Velocity(vel),
+                Force(force),
+                Mass(mass),
                 MaterialID(mat)
             ));
         }
