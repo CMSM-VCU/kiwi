@@ -15,4 +15,4 @@
 horizon = 2.0
 
 [[Grid]]
-path = "src/testgrid.csv"
+path = "test/testgrid.csv"

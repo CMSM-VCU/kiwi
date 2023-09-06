@@ -58,7 +58,7 @@ impl InputFile {
 #[derive(Parser, Debug, Resource)]
 #[command(author, version, about, long_about = "Path to the input file, it can be an abosolute path or it can be relative to wherever you are running the executable from.")]
 struct CommandLineInputs{
-    #[arg(long, short, help="Path to input file", default_value="src/testinput.toml")]
+    #[arg(long, short, help="Path to input file", default_value="test/testinput.toml")]
     input_file: String,
 }
 
