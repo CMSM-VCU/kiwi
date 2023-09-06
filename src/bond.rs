@@ -1,9 +1,9 @@
-use bevy::{prelude::*, utils::HashMap};
+use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
+use kd_tree::{KdTree, KdPoint};
 
 use crate::prelude::*;
 
-use kd_tree::{KdTree, KdPoint};
 
 
 /// Unit struct for labeling entities as a `Bond`
@@ -64,15 +64,13 @@ pub fn create_reference_bonds_spherical(
 
                 let key: u64 = u64::from(entity.index())*u64::from(other.index());
 
-                if !connections.contains_key(&key){
-                    connections.insert(key, connection);
-                }
+                connections.entry(key).or_insert(connection);
             }
         }
     }
     
     // Maybe instead of a bond entity, each material point could have a vec of enities (good for state-based, bad for bond-based)
-    for connection in connections.into_iter().map(|(_key, val)| val ){
+    for connection in connections.into_values(){
         trace!("Creating bond: ({:?}, {:?})", connection.from.index(), connection.to.index());
         commands.spawn((
             Bond,

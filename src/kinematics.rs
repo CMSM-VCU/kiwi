@@ -1,7 +1,8 @@
-use bevy::prelude::*;
 use serde::{Serialize, Deserialize};
 use bevy::math::Vec3A;
 use kd_tree::KdPoint;
+
+use crate::prelude::*;
 
 /// The spatial location of something in a reference configuration
 #[derive(Component, Default, Serialize, Deserialize, Debug, PartialEq)]

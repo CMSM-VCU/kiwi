@@ -14,6 +14,41 @@ pub mod prelude{
     pub use crate::material_point::*;
     pub use crate::bond::*;
     pub use crate::materials::*;
+
+    // Not importing everything because there is a bevy::prelude::Node that is meant for UI and not to be confused with a MaterialPoint
+    pub use bevy::prelude::{
+        App,
+        Plugin,
+
+        PreStartup,
+        Startup,
+        PostStartup,
+        PreUpdate,
+        Update,
+        PostUpdate,
+        
+
+        EventWriter,
+        EventReader,
+        Query,
+        Local,
+        Commands,
+        Resource,
+
+        Component,
+        With,
+        Entity,
+        Res,
+        ResMut,
+
+        error,
+        warn,
+        info,
+        debug,
+        trace,
+
+
+    };
 }
 
 pub use prelude::*;

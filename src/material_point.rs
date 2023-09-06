@@ -1,8 +1,4 @@
-//==============================
-//        Components
-//==============================
-use bevy::prelude::*;
-
+use crate::prelude::*;
 
 /// Unit struct used to tag an `Entity` as a `MaterialPoint`
 #[derive(Component)]

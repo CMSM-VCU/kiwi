@@ -1,10 +1,9 @@
 use bevy::app::AppExit;
 use bevy::log::Level;
 use bevy::log::LogPlugin;
-use bevy::prelude::*;
 
 
-/// Kiwi, an efficient peridynamics implementation
+use bevy::prelude::MinimalPlugins;
 use kiwi::prelude::*;
 
 
