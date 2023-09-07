@@ -1,5 +1,4 @@
 use serde::{Serialize, Deserialize};
-use bevy::math::Vec3A;
 use kd_tree::KdPoint;
 
 use crate::prelude::*;

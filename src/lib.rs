@@ -15,6 +15,8 @@ pub mod prelude{
     pub use crate::bond::*;
     pub use crate::materials::*;
 
+    pub use bevy::math::Vec3A;
+
     // Not importing everything because there is a bevy::prelude::Node that is meant for UI and not to be confused with a MaterialPoint
     pub use bevy::prelude::{
         App,
@@ -26,6 +28,8 @@ pub mod prelude{
         PreUpdate,
         Update,
         PostUpdate,
+
+        IntoSystemConfigs,
 
         EventWriter,
         EventReader,

@@ -1,4 +1,5 @@
 use bevy::math::Vec3A;
+use serde::{Deserialize, Serialize};
 
 use std::{fs, collections::HashMap};
 use clap::Parser;
@@ -19,7 +20,11 @@ impl Plugin for ParsingPlugin {
             .insert_resource(input_file)
 
 
-            .add_systems(PreStartup, parse_grid)
+            .add_systems(PreStartup, (
+                parse_materials,
+                (parse_grid,).after(parse_materials)
+            ))
+
             .add_systems(PostStartup, check_input_file_consumed)
 
             ;
@@ -63,6 +68,9 @@ struct CommandLineInputs{
 }
 
 
+
+
+
 // Panics if not all keys in the input file are read
 #[allow(clippy::needless_pass_by_value)]
 fn check_input_file_consumed(config: Res<InputFile>){
@@ -71,6 +79,20 @@ fn check_input_file_consumed(config: Res<InputFile>){
     info!("All inputs used!");
 }
 
+#[derive(Deserialize, Serialize, Resource)]
+struct MaterialsList(Vec<BondBasedLinearElastic>);
+
+fn parse_materials(
+    mut config: ResMut<InputFile>,
+    mut commands: Commands
+){
+    
+    let mats = config.get("Material").expect("No `[[Material]]`s defined in the input file");
+    
+    let list = MaterialsList::deserialize(mats).expect("Could not deserialize materials");
+    let map = Materials(list.0.into_iter().map(|x| {(x.id, x)}).collect::<HashMap<u32, BondBasedLinearElastic>>());
+    commands.insert_resource(map);
+}
 
 /// Consumes grid field of `InputFile` and creates material points from the grid file (csv format)
 /// Possible data includes:

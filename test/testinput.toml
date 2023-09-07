@@ -16,3 +16,8 @@ horizon = 2.0
 
 [[Grid]]
 path = "test/testgrid.csv"
+
+[[Material]]
+id = 1
+elastic_modulus = 10.0
+critical_strain = 0.1
